@@ -21,3 +21,10 @@ Any item not available in the provided text will be returned as null.
 
 `mvn test` 
 
+## Technical Notes
+
+The version of en-ner-person.bin included in src/main/resources was pulled from http://opennlp.sourceforge.net/models-1.5/ on 5/12/2018.
+
+Per http://opennlp.apache.org/models.html
+> The models on Sourceforge for 1.5.0 ...  are fully compatible with Apache OpenNLP 1.8.4.
+
