@@ -5,8 +5,8 @@ import com.colemanserious.bizcards.ContactInfo;
 import opennlp.tools.namefind.NameFinderME;
 import opennlp.tools.namefind.TokenNameFinderModel;
 import opennlp.tools.util.Span;
-
 import org.apache.commons.validator.routines.EmailValidator;
+import org.apache.commons.validator.routines.RegexValidator;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,14 +17,15 @@ public class BusinessCardParserNLP implements BusinessCardParser {
 
     /**
      * NOTE from OpenNLP documentation:
-     *  "The NameFinderME class is not thread safe, it must only be called from one thread.
-     *  To use multiple threads multiple NameFinderME instances sharing the same model instance can be created."
+     * "The NameFinderME class is not thread safe, it must only be called from one thread.
+     * To use multiple threads multiple NameFinderME instances sharing the same model instance can be created."
      */
     NameFinderME nameFinder;
 
     EmailValidator emailValidator;
+    RegexValidator phoneNumberRegExValidator;
 
-    public BusinessCardParserNLP()  {
+    public BusinessCardParserNLP() {
         TokenNameFinderModel model;
 
         try (InputStream modelIn = this.getClass().getClassLoader().getResourceAsStream("en-ner-person.bin")) {
@@ -35,17 +36,29 @@ public class BusinessCardParserNLP implements BusinessCardParser {
 
         nameFinder = new NameFinderME(model);
         emailValidator = EmailValidator.getInstance();
-    }
 
+        // Dev note for helping with testing further regex: http://reg-exp.com/
+
+        //  (xxx)xxx-xxxx, xxx-xxx-xxxx,  (where spacer: -, ., or space)
+        String phoneExpr = "\\(?(\\d{3})\\)?[-\\.\\s]?(\\d{3})[-\\.\\s]?(\\d{4})";
+        phoneNumberRegExValidator = new RegexValidator(
+                new String[]{
+                    "(\\d{10})",  // 10 digits - simplest case
+                    phoneExpr,
+                    "Phone:\\s?" + phoneExpr,
+                    "Tel:\\s?\\+(\\d{1})\\s?" + phoneExpr
+                },
+                false  // not case sensitive
+        );
+    }
 
     public ContactInfo getContactInfo(String text) {
 
         Map<String, Double> probableNames = new HashMap();
-        String name, emailAddress = null;
-        boolean isEmailAddressValid = false;
+        String name = null, emailAddress = null, phoneNumber = null;
 
         // Treat each line individually
-        //  Assumption: Names stay on same line!
+        //  Assumption: Names, phone numbers, email addresses stay on same line!
         String[] documentLines = text.split("\n");
 
         for (String line : documentLines) {
@@ -67,7 +80,12 @@ public class BusinessCardParserNLP implements BusinessCardParser {
             }
 
             // Check for phone number
-
+            if (phoneNumberRegExValidator.isValid(line)) {
+                String[] digits = phoneNumberRegExValidator.match(line);
+                if (digits != null) {
+                    phoneNumber = String.join("", digits);
+                }
+            }
 
             // Check for emailAddress
             for (String possibleAddress : lineText) {
@@ -87,8 +105,7 @@ public class BusinessCardParserNLP implements BusinessCardParser {
 
         nameFinder.clearAdaptiveData();
 
-        return new NLPContactInfo(maxProbName, null, emailAddress);
-
+        return new NLPContactInfo(maxProbName, phoneNumber, emailAddress);
 
     }
 
