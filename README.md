@@ -1,10 +1,10 @@
 # Business Card OCR Component
 
-This component that parses the results of the optical character recognition (OCR) component in order to extract the name, phone number, and email address from the processed business card image.
+This component parses the results of the optical character recognition (OCR) component in order to extract the name, phone number, and email address from the processed business card image.
 
-It is provided as a Java jar for integration into the OCR processing pipeline.
+Expectation is that it's used as a Java jar for integration into the OCR processing pipeline, but the assembled JAR includes a runner program.
 
-## Scope of component:
+## Scope of component originally requested
 Given a string that contains the text retrieved from a business card, returns the *name*, *phone number*, and *email address* within a ContactInfo object.
  
 * name: (string) full name
@@ -21,6 +21,8 @@ Any item not available in the provided text will be returned as null.
 ## Run instructions
 
 After building using the instruction above, copy the resulting jar file (bizcard-contactinfo-{version}.jar) to the location of your choosing.
+
+Execute the provided runner program via
 
 `java -cp bizcard-contactinfo-1.0-SNAPSHOT.jar BusinessCardParserRunner "{text here}"`
 
