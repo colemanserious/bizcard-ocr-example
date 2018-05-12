@@ -96,12 +96,16 @@ public class BusinessCardParserNLP implements BusinessCardParser {
             }
         }
 
-        // Assumption: there's one name per business card
-        //   use entry with maximum probability, in case nlp identifies more than one person's name
-        name = probableNames.entrySet().stream()
-                .max((n1, n2) -> Double.compare(n1.getValue(), n2.getValue()))
-                .get()
-                .getKey();
+        // Assumption: there's at most one name per business card
+        //  (If we're not really given a business card, may be none)
+        if (probableNames.entrySet().size() > 0) {
+
+            //   use entry with maximum probability, in case nlp identifies more than one person's name
+            name = probableNames.entrySet().stream()
+                    .max((n1, n2) -> Double.compare(n1.getValue(), n2.getValue()))
+                    .get()
+                    .getKey();
+        }
 
         nameFinder.clearAdaptiveData();
 

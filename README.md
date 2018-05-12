@@ -17,9 +17,26 @@ Any item not available in the provided text will be returned as null.
  
 `mvn package`
 
+
+## Run instructions
+
+After building using the instruction above, copy the resulting jar file (bizcard-contactinfo-{version}.jar) to the location of your choosing.
+
+`java -cp bizcard-contactinfo-1.0-SNAPSHOT.jar BusinessCardParserRunner "{text here}"`
+
+Results should look like: 
+  
+~~~~
+  Info:
+  -- name: {name extracted or null}
+  -- emailAddress: {email address extracted or null)
+  -- phoneNumber: {phone number extracted or null) 
+~~~~  
+
 ## Test instructions
 
 `mvn test` 
+(Tests are also run as part of packaging.)
 
 ## Technical Notes
 

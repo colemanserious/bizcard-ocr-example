@@ -21,8 +21,7 @@ public class BizCardParserNLPTest {
     }
 
     public void genericTest( String document, String name, String phoneNumber, String emailAddress ) {
-
-        System.out.println("Parser: " + parser);
+        
         ContactInfo info = parser.getContactInfo(document);
         assertEquals(name, info.getName());
         assertEquals(phoneNumber, info.getPhoneNumber());
