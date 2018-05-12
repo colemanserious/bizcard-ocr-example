@@ -31,7 +31,7 @@ public class BizCardParserNLPTest {
         ContactInfo info = parser.getContactInfo(document);
         assertEquals(name, info.getName());
         //assertEquals(info.getPhoneNumber(), phoneNumber);
-        //assertEquals(info.getEmailAddress(),  emailAddress);
+        assertEquals(info.getEmailAddress(),  emailAddress);
 
     }
     @Test

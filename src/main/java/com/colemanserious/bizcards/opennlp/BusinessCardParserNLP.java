@@ -1,15 +1,16 @@
 package com.colemanserious.bizcards.opennlp;
 
-import com.colemanserious.bizcards.*;
+import com.colemanserious.bizcards.BusinessCardParser;
+import com.colemanserious.bizcards.ContactInfo;
 import opennlp.tools.namefind.NameFinderME;
 import opennlp.tools.namefind.TokenNameFinderModel;
 import opennlp.tools.util.Span;
 
-import java.io.FileInputStream;
+import org.apache.commons.validator.routines.EmailValidator;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class BusinessCardParserNLP implements BusinessCardParser {
@@ -21,6 +22,8 @@ public class BusinessCardParserNLP implements BusinessCardParser {
      */
     NameFinderME nameFinder;
 
+    EmailValidator emailValidator;
+
     public BusinessCardParserNLP()  {
         TokenNameFinderModel model;
 
@@ -31,13 +34,15 @@ public class BusinessCardParserNLP implements BusinessCardParser {
         }
 
         nameFinder = new NameFinderME(model);
+        emailValidator = EmailValidator.getInstance();
     }
 
 
     public ContactInfo getContactInfo(String text) {
 
         Map<String, Double> probableNames = new HashMap();
-        String name = null;
+        String name, emailAddress = null;
+        boolean isEmailAddressValid = false;
 
         // Treat each line individually
         //  Assumption: Names stay on same line!
@@ -45,8 +50,9 @@ public class BusinessCardParserNLP implements BusinessCardParser {
 
         for (String line : documentLines) {
 
-            // Check for name
             String[] lineText = line.split("\\s+");
+
+            // Check for name
             Span[] spans = nameFinder.find(lineText);
 
             for (Span span : spans) {
@@ -64,6 +70,12 @@ public class BusinessCardParserNLP implements BusinessCardParser {
 
 
             // Check for emailAddress
+            for (String possibleAddress : lineText) {
+                if (emailValidator.isValid(possibleAddress)) {
+                    emailAddress = possibleAddress;
+                }
+            }
+
         }
 
         // Assumption: there's one name per business card
@@ -75,7 +87,7 @@ public class BusinessCardParserNLP implements BusinessCardParser {
 
         nameFinder.clearAdaptiveData();
 
-        return new NLPContactInfo(maxProbName, null, null);
+        return new NLPContactInfo(maxProbName, null, emailAddress);
 
 
     }
