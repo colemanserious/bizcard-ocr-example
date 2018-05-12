@@ -44,7 +44,7 @@ public class BusinessCardParserNLP implements BusinessCardParser {
         phoneNumberRegExValidator = new RegexValidator(
                 new String[]{
                     "(\\d{10})",  // 10 digits - simplest case
-                    phoneExpr,
+                    "^" + phoneExpr,
                     "Phone:\\s?" + phoneExpr,
                     "Tel:\\s?\\+(\\d{1})\\s?" + phoneExpr
                 },
@@ -56,6 +56,8 @@ public class BusinessCardParserNLP implements BusinessCardParser {
 
         Map<String, Double> probableNames = new HashMap();
         String name = null, emailAddress = null, phoneNumber = null;
+
+        String testedEmailAddress, testedPhoneNumber;
 
         // Treat each line individually
         //  Assumption: Names, phone numbers, email addresses stay on same line!
@@ -80,33 +82,50 @@ public class BusinessCardParserNLP implements BusinessCardParser {
             }
 
             // Check for phone number
-            if (phoneNumberRegExValidator.isValid(line)) {
-                String[] digits = phoneNumberRegExValidator.match(line);
-                if (digits != null) {
-                    phoneNumber = String.join("", digits);
-                }
+            testedPhoneNumber = getValidPhoneNumber(line);
+            if (testedPhoneNumber != null) {
+                phoneNumber = testedPhoneNumber;
             }
 
             // Check for emailAddress
             for (String possibleAddress : lineText) {
-                if (emailValidator.isValid(possibleAddress)) {
-                    emailAddress = possibleAddress;
+                testedEmailAddress = getValidEmailAddress(possibleAddress);
+                if (testedEmailAddress != null) {
+                    emailAddress = testedEmailAddress;
                 }
             }
-
         }
 
         // Assumption: there's one name per business card
         //   use entry with maximum probability, in case nlp identifies more than one person's name
-        String maxProbName = probableNames.entrySet().stream()
+        name = probableNames.entrySet().stream()
                 .max((n1, n2) -> Double.compare(n1.getValue(), n2.getValue()))
                 .get()
                 .getKey();
 
         nameFinder.clearAdaptiveData();
 
-        return new NLPContactInfo(maxProbName, phoneNumber, emailAddress);
+        return new NLPContactInfo(name, phoneNumber, emailAddress);
 
+    }
+
+    String getValidEmailAddress(String checkText) {
+        if (emailValidator.isValid(checkText)) {
+            return checkText;
+        }
+        return null;
+    }
+
+    String getValidPhoneNumber(String textLine) {
+
+        String checkText = textLine.trim();
+        if (phoneNumberRegExValidator.isValid(checkText)) {
+            String[] digits = phoneNumberRegExValidator.match(checkText);
+            if (digits != null) {
+                return String.join("", digits);
+            }
+        }
+        return null;
     }
 
     class NLPContactInfo implements ContactInfo {
